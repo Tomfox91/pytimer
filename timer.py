@@ -2,8 +2,13 @@
 # -*- coding: utf-8 -*-
 
 
-
+# Configuration
 totalMinutes = 20
+windowDuplication = {
+	'points': 1,
+	'time': 1
+}
+# End configuration
 
 
 
@@ -46,22 +51,25 @@ class MainFrame(Frame):
 		grid.pack()
 
 		self.au = Button(grid, text="A+")
-		self.au.grid(row=1, column=0, padx=5, pady=5)
+		self.au.grid(row=1, column=0, padx=5, pady=2)
 
 		self.ad = Button(grid, text="A-")
-		self.ad.grid(row=0, column=0, padx=5, pady=5)
+		self.ad.grid(row=0, column=0, padx=5, pady=2)
 
 		self.bu = Button(grid, text="B+")
-		self.bu.grid(row=1, column=1, padx=5, pady=5)
+		self.bu.grid(row=1, column=1, padx=5, pady=2)
 
 		self.bd = Button(grid, text="B-")
-		self.bd.grid(row=0, column=1, padx=5, pady=5)
+		self.bd.grid(row=0, column=1, padx=5, pady=2)
 
 		self.ss = Button(grid, text="start/stop")
-		self.ss.grid(columnspan=2, pady=5)
+		self.ss.grid(columnspan=2, pady=2)
 
 		self.rt = Button(grid, text="reset")
-		self.rt.grid(columnspan=2, pady=5)
+		self.rt.grid(columnspan=2, pady=2)
+
+		self.sign = Label(grid, text="TFC 2014", font=(None, 10), foreground='navy')
+		self.sign.grid(columnspan=2, pady=2)
 
 		self.focus_set()
 
@@ -92,6 +100,11 @@ class NumWindow(Toplevel):
 	def initUI(self, title, geometry):
 		self.title(title)
 		self.geometry(geometry)
+
+		def nothing():
+			pass
+
+		self.protocol('WM_DELETE_WINDOW', nothing)
 
 		self.bind('<Key>', self.binder.keyEvent)
 		self.label = Label(self, text='-', background='white')
@@ -184,6 +197,14 @@ class Timer:
 
 
 
+def foreacher(arr, fun):
+	def fn(*a, **k):
+		for i in arr:
+			fun(i)(*a, **k)
+	return fn
+
+
+
 def main():
 	binder = Binder()
 
@@ -191,33 +212,42 @@ def main():
 	sw = root.winfo_screenwidth() /10
 	sh = root.winfo_screenheight() /10
 
-	root.geometry("200x150+{x:d}+{y:d}".format(x = 5*sw -100, y = 7*sh + 40))
+	root.geometry("200x170+{x:d}+{y:d}".format(x = 5*sw -100, y = 7*sh + 40))
 	mainwin = MainFrame(root, binder)
 
-	wpa = NumWindow(root, "Punti A", binder,
-					"{w:d}x{h:d}+{x:d}+{y:d}".format(w = 3*sw, h = 3*sh, x = 2*sw, y = sh))
-	ta = PointTracker(wpa.setNum)
+	wpa = []
+	for i in range(windowDuplication['points']):
+		wpa.append(NumWindow(root, "Punti A", binder,
+			"{w:d}x{h:d}+{x:d}+{y:d}".format(w = 3*sw, h = 3*sh, x = 2*sw, y = sh)))
+	ta = PointTracker(foreacher(wpa, lambda i: i.setNum))
 	ta.reset()
 	mainwin.setA(ta.up, ta.down)
 	binder.addBinding('c', ta.up)
 	binder.addBinding('d', ta.down)
 
-	wpb = NumWindow(root, "Punti B", binder,
-					"{w:d}x{h:d}+{x:d}+{y:d}".format(w = 3*sw, h = 3*sh, x = 5*sw, y = sh))
-	tb = PointTracker(wpb.setNum)
+	wpb =[]
+	for i in range(windowDuplication['points']):
+		wpb.append(NumWindow(root, "Punti B", binder,
+			"{w:d}x{h:d}+{x:d}+{y:d}".format(w = 3*sw, h = 3*sh, x = 5*sw, y = sh)))
+	tb = PointTracker(foreacher(wpb, lambda i: i.setNum))
 	tb.reset()
 	mainwin.setB(tb.up, tb.down)
 	binder.addBinding('m', tb.up)
 	binder.addBinding('k', tb.down)
 
-	wm = NumWindow(root, "Minuti",  binder,
-					"{w:d}x{h:d}+{x:d}+{y:d}".format(w = 3*sw, h = 3*sh, x = 2*sw, y = 4*sh + 20))
-	ws = NumWindow(root, "Secondi", binder,
-					"{w:d}x{h:d}+{x:d}+{y:d}".format(w = 3*sw, h = 3*sh, x = 5*sw, y = 4*sh + 20))
+	wm = []
+	for i in range(windowDuplication['time']):
+		wm.append(NumWindow(root, "Minuti",  binder,
+			"{w:d}x{h:d}+{x:d}+{y:d}".format(w = 3*sw, h = 3*sh, x = 2*sw, y = 4*sh + 20)))
+	ws = []
+	for i in range(windowDuplication['time']):
+		ws.append(NumWindow(root, "Secondi", binder,
+			"{w:d}x{h:d}+{x:d}+{y:d}".format(w = 3*sw, h = 3*sh, x = 5*sw, y = 4*sh + 20)))
 
 	def updateTimer(mm, ss):
-		wm.setNum("{:02d}".format(mm))
-		ws.setNum("{:02d}".format(ss))
+		for i in range(windowDuplication['time']):
+			wm[i].setNum("{:02d}".format(mm))
+			ws[i].setNum("{:02d}".format(ss))
 
 	def reset():
 		timer.reset()
