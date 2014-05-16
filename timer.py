@@ -249,15 +249,10 @@ def main():
 			wm[i].setNum("{:02d}".format(mm))
 			ws[i].setNum("{:02d}".format(ss))
 
-	def reset():
-		timer.reset()
-		ta.reset()
-		tb.reset()
-
 	timer = Timer(updateTimer)
 	mainwin.setStartStop(timer.startStop)
 	binder.addBinding(' ', timer.startStop)
-	mainwin.setReset(reset)
+	mainwin.setReset(timer.reset)
 
 	root.mainloop()
 
